@@ -40,13 +40,6 @@
   <arg name="transform_filepath"                default="$(find interbotix_xsarm_perception)/config/static_transforms.yaml"/>
 
 
-
-  <!-- Set parameters -->
-  <rosparam command="load" file="$(find apriltag_ros)/config/settings.yaml" ns="$(arg node_namespace)" />
-  <rosparam command="load" file="$(find apriltag_ros)/config/tags.yaml" ns="$(arg node_namespace)" />
-
-
-
   <include file="$(find interbotix_xsarm_descriptions)/launch/xsarm_description.launch">
     <arg name="robot_model"                       value="$(arg robot_model)"/>
     <arg name="robot_name"                        value="$(arg robot_name)"/>
@@ -59,16 +52,11 @@
     <arg name="use_rviz"                          value="$(arg use_rviz)"/>
   </include>
 
-  <node
-    name="xs_sdk"
-    pkg="interbotix_xs_sdk"
-    type="$(arg xs_sdk_type)"
-    output="screen"
-    ns="$(arg robot_name)">
-    <param name="motor_configs"                   value="$(arg motor_configs)"/>
-    <param name="mode_configs"                    value="$(arg mode_configs)"/>
-    <param name="load_configs"                    value="$(arg load_configs)"/>
-  </node>
+
+
+  <!-- Set parameters -->
+  <rosparam command="load" file="$(find apriltag_ros)/config/settings.yaml" ns="$(arg node_namespace)" />
+  <rosparam command="load" file="$(find apriltag_ros)/config/tags.yaml" ns="$(arg node_namespace)" />
 
   <node pkg="apriltag_ros" type="apriltag_ros_continuous_node" name="$(arg node_namespace)" clear_params="true" output="screen" launch-prefix="$(arg launch_prefix)" >
     <!-- Remap topics from those used in code to those on the ROS network -->
@@ -190,7 +178,7 @@
       <arg name="tf_publish_rate"          value="$(arg tf_publish_rate)"/>
 
       <arg name="filters"                  value="$(arg filters)"/>
-      <arg name="clip_distance"            value="$(arg clip_distance)"/>
+      <!-- <arg name="clip_distance"            value="$(arg clip_distance)"/> -->
       <arg name="linear_accel_cov"         value="$(arg linear_accel_cov)"/>
       <arg name="initial_reset"            value="$(arg initial_reset)"/>
       <arg name="unite_imu_method"         value="$(arg unite_imu_method)"/>
@@ -201,7 +189,7 @@
     </include>
   </group>
 
-  <!-- <include file="$(find interbotix_perception_modules)/launch/armtag.launch">
+  <include file="$(find interbotix_perception_modules)/launch/armtag.launch">
     <arg name="tag_family"                        value="$(arg tag_family)"/>
     <arg name="standalone_tags"                   value="$(arg standalone_tags)"/>
     <arg name="camera_frame"                      value="$(arg camera_frame)"/>
@@ -214,11 +202,7 @@
     <arg name="arm_tag_frame"                     value="$(arg arm_tag_frame)"/>
     <arg name="use_armtag_tuner_gui"              value="$(arg use_armtag_tuner_gui)"/>
     <arg name="position_only"                     value="$(arg position_only)"/>
-  </include> -->
+  </include>
 
-  <!-- <include file="$(find interbotix_perception_modules)/launch/static_transform_pub.launch">
-    <arg name="load_transforms"                   value="$(arg load_transforms)"/>
-    <arg name="transform_filepath"                value="$(arg transform_filepath)"/>
-  </include> -->
 
 </launch>
