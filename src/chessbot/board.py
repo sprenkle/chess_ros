@@ -70,4 +70,4 @@ class Board:
 # camera height = 310
 #chess_board = Board(700, 320, 240, .456)
 if __name__ == '__main__':
-    chess_board = Board(423, 640, 480, 137, 499, 102, 466)
+    chess_board = Board(423, 640, 480, 85, 463, 79, 455)
