@@ -101,8 +101,28 @@ class MoveBoard:
         self.bot.arm.set_ee_pose_components(x=0.3, y=-.2,z=0.25)
         self.release()
 
+    def castle(self, fromX, fromY, toX, toY):
+        self.pick_up(fromX, fromY, self.piece_height[6])
+        self.put_down(toX , toY, self.piece_height[6])
+
+        if fromX < toX:
+            rookX = 7
+        else:
+            rookX = 0
+
+        self.pick_up(rookX, fromY, self.piece_height[4])
+        
+        if fromX < toX:
+            self.put_down(toX - 1, toY, self.piece_height[4])
+        else:
+            self.put_down(toX + 1, toY, self.piece_height[4])
+
     def move_alg(self, move):
         fromX, fromY, toX, toY = self.fen.get_move_components(move) 
+        if (fromX == 3 and (fromY == 0 or fromY == 7) and (toX == 1 or toX == 5) and self.fen.piece_at(fromX, fromY) == 6) or\
+            (fromX == 4 and (fromY == 0 or fromY == 7) and (toX == 2 or toX == 6) and self.fen.piece_at(fromX, fromY) == 6):
+            self.castle(fromX, fromY, toX, toY)
+
         self.move(fromX, fromY, toX, toY)
 
     def move(self, fromX, fromY, toX, toY):

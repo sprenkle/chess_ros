@@ -97,17 +97,15 @@ class Fen():
                 col += 1
             elif c == 'K':
                 old_pos[col, row, 0] = 6
-                col += 1
                 old_pos[col, row, 1] = w
+                col += 1
             if row >= 7 and col > 7:
                 break 
         if not white_bottom:
             old_pos = np.rot90(old_pos)
             old_pos = np.rot90(old_pos)
 
-        print(f'0, 0 {old_pos[0,0,0]} 1,7 {old_pos[1,7,0]}')
         return old_pos
 
-
-
-
+if __name__ == '__main__':
+    mfen = Fen("2k2b1r/p4ppp/2p1p3/2N5/1B6/7P/5PPK/1q6 b - - 2 23", True)
