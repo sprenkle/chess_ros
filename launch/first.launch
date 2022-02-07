@@ -191,11 +191,11 @@
   </group>
 
   <node pkg="piece_detector" name="pieceDetector" type="piece_detector.py"/>
-  <node pkg="piece_detector" name="chessPieceDetector" type="chess_piece_detector.py"/>
+  <!-- <node pkg="piece_detector" name="chessPieceDetector" type="chess_piece_detector.py"/>
   <node pkg="piece_detector" name="chessEngine" type="chess_engine.py"/>
   <node pkg="piece_detector" name="humanPlayer" type="human_player.py"/>
   <node pkg="piece_detector" name="robotPlayer" type="robot_player.py"/>
-  <node pkg="piece_detector" name="command" type="command.py"/>
+  <node pkg="piece_detector" name="command" type="command.py"/> -->
 
   
 

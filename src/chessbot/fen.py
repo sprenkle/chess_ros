@@ -27,6 +27,10 @@ class Fen():
     def piece_at(self, x, y):
         return self.array[x, y, 0]
 
+    def en_passant(self):
+        print(f'self.values {self.values}')
+        return self.values[3]
+
     # Returns x, y with 0,0 being top left
     def get_move_components(self, alg_not):
         fromX = self.alg_to_num[alg_not[0:1]]

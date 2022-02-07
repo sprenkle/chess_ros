@@ -13,10 +13,10 @@ from chessbot import fen
 
 class MoveBoard:
 
-    def __init__(self):
-        self.piece_height = {6:0.033, 5:0.035, 4:.023, 3:0.03, 2:0.03, 1:.024}
-        self.piece_pickup = {6:1.5, 5:2.5, 4:3.5, 3:4.5, 2:5.5, 1:6.5}
-        self.bot = InterbotixManipulatorXS("rx200", "arm", "gripper", gripper_pressure=1, init_node=False)
+    def __init__(self, start_node = False):
+        self.piece_height = {6:0.0475, 5:0.0435, 4:.0295, 3:0.0325, 2:0.035, 1:.023}
+        #self.piece_pickup = {6:1.5, 5:2.5, 4:3.5, 3:4.5, 2:5.5, 1:6.5}
+        self.bot = InterbotixManipulatorXS("rx200", "arm", "gripper", gripper_pressure=1, init_node=start_node)
         self.bot.dxl.robot_set_motor_registers("single", "shoulder", "Position_P_Gain", 1500)
         self.bot.dxl.robot_set_motor_registers("single", "elbow", "Position_P_Gain", 1500)
         self.bot.dxl.robot_set_motor_registers("single", "wrist_angle", "Position_P_Gain", 1500)
@@ -27,7 +27,8 @@ class MoveBoard:
         self.trans = self.get_transform(tfBuffer,'rx200/base_link', 'rx200/board')
         self.bot.arm.go_to_sleep_pose()
         self.pickupHeight = .11
-        rospy.Subscriber('/chess_status', GameStatus,self.chess_status_callback)
+        self.enable_move = False
+        #rospy.Subscriber('/chess_status', GameStatus,self.chess_status_callback)
 
     def chess_status_callback(self, data):
         print(f'move_board - white bottom ={data.white_player == "human"}')
@@ -49,8 +50,8 @@ class MoveBoard:
         # rpy = euler_from_quaternion(quat_list)
         x = 0.252
         y = -0.12
-        z = .0875
-        rpy = [-0.01, -.07, 0.019] # -.075
+        z = .08 # .875
+        rpy = [-0.01, -.075, 0.01] # -.075 .019
         T_TargetSource = ang.poseToTransformationMatrix([x, y, z, rpy[0], rpy[1], rpy[2]])
         return T_TargetSource
 
@@ -89,7 +90,7 @@ class MoveBoard:
     def put_down(self, x, y, piece_hight):
         bx, by = self.get_board_coordinates(x, y)
         toHigh = np.matmul(self.trans, np.array([bx, by, self.pickupHeight, 1]))
-        toPickup = np.matmul(self.trans, np.array([bx, by, piece_hight +.005, 1]))
+        toPickup = np.matmul(self.trans, np.array([bx, by, piece_hight +.01, 1])) #.005
         
         self.set_pose(toHigh)
         self.set_pose(toPickup)
@@ -100,6 +101,9 @@ class MoveBoard:
         self.pick_up(x, y, piece_hight)
         self.bot.arm.set_ee_pose_components(x=0.3, y=-.2,z=0.25)
         self.release()
+
+    def rest_position(self):
+        self.bot.arm.go_to_sleep_pose()
 
     def castle(self, fromX, fromY, toX, toY):
         self.pick_up(fromX, fromY, self.piece_height[6])
@@ -117,13 +121,33 @@ class MoveBoard:
         else:
             self.put_down(toX + 1, toY, self.piece_height[4])
 
-    def move_alg(self, move):
+    def en_passant(self, fromX, fromY, toX, toY):
+        self.remove_piece(toX, fromY, self.piece_height[1])
+        piece_hight = self.piece_height[1]
+        self.pick_up(fromX, fromY, piece_hight)
+        self.put_down(toX , toY, piece_hight)
+        self.rest_position()
+
+    def move_alg(self, move, my_fen):
+        self.fen = my_fen
+
+        print(f'move_alg = {move}')
+        
         fromX, fromY, toX, toY = self.fen.get_move_components(move) 
+        
         if (fromX == 3 and (fromY == 0 or fromY == 7) and (toX == 1 or toX == 5) and self.fen.piece_at(fromX, fromY) == 6) or\
             (fromX == 4 and (fromY == 0 or fromY == 7) and (toX == 2 or toX == 6) and self.fen.piece_at(fromX, fromY) == 6):
             self.castle(fromX, fromY, toX, toY)
+            return
+
+        if move[2:4] ==self.fen.en_passant() and self.fen.piece_at(fromX, fromY) == 1 and fromX != toX:
+            print(f'move[2:4] = {move[2:4]} ')
+            self.en_passant(fromX, fromY, toX, toY)
+            return
 
         self.move(fromX, fromY, toX, toY)
+        self.rest_position()
+        return True
 
     def move(self, fromX, fromY, toX, toY):
         print(f'Piece from {fromX} {fromY} {self.fen.piece_at(fromX, fromY)}  to {toX} {toY} {self.fen.piece_at(toX, toY)}')
@@ -132,7 +156,7 @@ class MoveBoard:
         piece_hight = self.piece_height[self.fen.piece_at(fromX, fromY)]
         self.pick_up(fromX, fromY, piece_hight)
         self.put_down(toX , toY, piece_hight)
-        self.bot.arm.go_to_sleep_pose()
+        self.rest_position()
     
     def sleep(self):
         self.bot.arm.go_to_sleep_pose()
@@ -140,8 +164,14 @@ class MoveBoard:
 
 if __name__ == '__main__':
     print("move.py")
-    chessBoard2 = MoveBoard()
-    chessBoard2.move_alg("e2e3")
+    chessBoard2 = MoveBoard(start_node=True)
+    print("ddsc")
+    game_status = GameStatus(board = "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1", white_player = "human") 
+    print("tesc")
+    chessBoard2.chess_status_callback(game_status)
+    print("bakc")
+    chessBoard2.move_alg("d8d6")
+    chessBoard2.move_alg("d1d3")
     #chessBoard2.move(1,3,2,3)
     # chessBoard2.move(6,0,1,0)
     # for i in range(8):
